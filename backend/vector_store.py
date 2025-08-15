@@ -265,3 +265,22 @@ class VectorStore:
         except Exception as e:
             print(f"Error getting lesson link: {e}")
     
+    def search_course_catalog(self, course_name: str) -> SearchResults:
+        """
+        Search the course catalog collection for course metadata.
+        
+        Args:
+            course_name: Course title or partial name to search for
+            
+        Returns:
+            SearchResults object with course metadata
+        """
+        try:
+            results = self.course_catalog.query(
+                query_texts=[course_name],
+                n_results=1
+            )
+            return SearchResults.from_chroma(results)
+        except Exception as e:
+            return SearchResults.empty(f"Course catalog search error: {str(e)}")
+    

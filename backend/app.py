@@ -65,9 +65,18 @@ async def query_documents(request: QueryRequest):
         # Process query using RAG system
         answer, sources = rag_system.query(request.query, session_id)
         
+        # Convert sources from dict format to string format for API response
+        formatted_sources = []
+        if sources:
+            for source in sources:
+                if isinstance(source, dict):
+                    formatted_sources.append(f"{source.get('text', '')}")
+                else:
+                    formatted_sources.append(str(source))
+        
         return QueryResponse(
             answer=answer,
-            sources=sources,
+            sources=formatted_sources,
             session_id=session_id
         )
     except Exception as e:
