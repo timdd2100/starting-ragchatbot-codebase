@@ -132,8 +132,8 @@ class DocumentProcessor:
                 course_link = link_match.group(1).strip()
                 continue
                 
-            # Try to match instructor
-            instructor_match = re.match(r'^Course Instructor:\s*(.+)$', line, re.IGNORECASE)
+            # Try to match instructor (both "Instructor:" and "Course Instructor:")
+            instructor_match = re.match(r'^(?:Course\s+)?Instructor:\s*(.+)$', line, re.IGNORECASE)
             if instructor_match:
                 instructor_name = instructor_match.group(1).strip()
                 continue
@@ -251,6 +251,7 @@ class DocumentProcessor:
                     course_chunk = CourseChunk(
                         content=chunk,
                         course_title=course.title,
+                        lesson_number=None,  # No lesson structure found
                         chunk_index=chunk_counter
                     )
                     course_chunks.append(course_chunk)

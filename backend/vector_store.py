@@ -141,21 +141,30 @@ class VectorStore:
         # Build lessons metadata and serialize as JSON string
         lessons_metadata = []
         for lesson in course.lessons:
-            lessons_metadata.append({
+            lesson_data = {
                 "lesson_number": lesson.lesson_number,
-                "lesson_title": lesson.title,
-                "lesson_link": lesson.lesson_link
-            })
+                "lesson_title": lesson.title
+            }
+            # Only add lesson_link if it's not None
+            if lesson.lesson_link is not None:
+                lesson_data["lesson_link"] = lesson.lesson_link
+            lessons_metadata.append(lesson_data)
         
+        # Build course metadata, excluding None values
+        course_metadata = {
+            "title": course.title,
+            "lessons_json": json.dumps(lessons_metadata),  # Serialize as JSON string
+            "lesson_count": len(course.lessons)
+        }
+        # Only add optional fields if they're not None
+        if course.instructor is not None:
+            course_metadata["instructor"] = course.instructor
+        if course.course_link is not None:
+            course_metadata["course_link"] = course.course_link
+            
         self.course_catalog.add(
             documents=[course_text],
-            metadatas=[{
-                "title": course.title,
-                "instructor": course.instructor,
-                "course_link": course.course_link,
-                "lessons_json": json.dumps(lessons_metadata),  # Serialize as JSON string
-                "lesson_count": len(course.lessons)
-            }],
+            metadatas=[course_metadata],
             ids=[course.title]
         )
     
@@ -165,11 +174,16 @@ class VectorStore:
             return
         
         documents = [chunk.content for chunk in chunks]
-        metadatas = [{
-            "course_title": chunk.course_title,
-            "lesson_number": chunk.lesson_number,
-            "chunk_index": chunk.chunk_index
-        } for chunk in chunks]
+        metadatas = []
+        for chunk in chunks:
+            metadata = {
+                "course_title": chunk.course_title,
+                "chunk_index": chunk.chunk_index
+            }
+            # Only add lesson_number if it's not None (ChromaDB doesn't accept None values)
+            if chunk.lesson_number is not None:
+                metadata["lesson_number"] = chunk.lesson_number
+            metadatas.append(metadata)
         # Use title with chunk index for unique IDs
         ids = [f"{chunk.course_title.replace(' ', '_')}_{chunk.chunk_index}" for chunk in chunks]
         
